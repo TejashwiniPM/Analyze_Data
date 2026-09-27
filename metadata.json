@@ -1,0 +1,6 @@
+{
+  "name": "Analyze Data",
+  "description": "AI-Powered Data Analysis & Business Intelligence Platform. Upload datasets, inspect data quality, calculate verified analytical metrics, visualize trends, and ask questions in natural language with strict fact-grounded AI explanations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
