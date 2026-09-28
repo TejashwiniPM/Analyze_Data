@@ -7,12 +7,62 @@ const rawKey = process.env.GEMINI_API_KEY?.trim();
 if (rawKey && rawKey !== 'MY_GEMINI_API_KEY' && !rawKey.includes('PLACEHOLDER') && rawKey.length > 10) {
   aiClient = new GoogleGenAI({
     apiKey: rawKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-    },
   });
+}
+
+/**
+ * Execute Gemini model call with resilient model fallback and safe timeout cleanup
+ */
+async function callGeminiWithTimeoutAndFallback(
+  prompt: string,
+  systemInstruction: string,
+  timeoutMs = 25000
+): Promise<string | null> {
+  if (!aiClient || !process.env.GEMINI_API_KEY) {
+    return null;
+  }
+
+  // Model hierarchy: fast high-throughput lite model first, with fallback to standard flash
+  const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
+
+  for (const model of candidateModels) {
+    let timer: NodeJS.Timeout | null = null;
+    try {
+      const callPromise = aiClient.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          temperature: 0.2,
+        },
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`AI generation timed out after ${timeoutMs}ms for ${model}`)),
+          timeoutMs
+        );
+      });
+
+      const response = (await Promise.race([callPromise, timeoutPromise])) as any;
+      if (timer) clearTimeout(timer);
+
+      const text = response?.text?.trim() || '';
+      if (text) {
+        return text;
+      }
+    } catch (err: any) {
+      if (timer) clearTimeout(timer);
+      // If error is high demand / 503 or timeout, continue to next fallback model
+      const msg = err?.message || String(err);
+      if (msg.includes('503') || msg.includes('timed out') || msg.includes('demand')) {
+        continue;
+      }
+    }
+  }
+
+  return null;
 }
 
 export interface AskMyDataResponse {
@@ -77,7 +127,7 @@ export class AIService {
     const { question, calculationPlan, calculatedFacts, datasetContext, conversationHistory } = params;
 
     // Prepare system instructions enforcing strict FACT / INTERPRETATION / LIMITATION principles
-    const systemInstruction = `You are the Lead AI Data Analyst for the 'Analytics with Data' platform.
+    const systemInstruction = `You are the Lead AI Data Analyst for the 'Analyze Data' platform.
 CRITICAL PRINCIPLES:
 1. Python/SQL calculated the facts. You ONLY explain these verified facts.
 2. NEVER invent, hallucinate, or alter any numbers. Use ONLY the numbers present in 'calculatedFacts'.
@@ -88,9 +138,7 @@ CRITICAL PRINCIPLES:
 4. If asked "Why", explain where the mathematical variance occurred without asserting unproven external causation.
 5. Return clean JSON matching the requested schema.`;
 
-    if (aiClient && process.env.GEMINI_API_KEY) {
-      try {
-        const prompt = `User Question: "${question}"
+    const prompt = `User Question: "${question}"
 Dataset: ${datasetContext.name} (${datasetContext.rowCount} rows, columns: ${datasetContext.columns.join(', ')})
 Computational Plan Executed: ${calculationPlan}
 Calculated Verified Facts (JSON):
@@ -113,42 +161,25 @@ Respond with a JSON object with this exact shape:
   "suggestedFollowUps": ["Follow up question 1", "Follow up question 2", "Follow up question 3"]
 }`;
 
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('AI generation timed out after 6000ms')), 6000)
-        );
-
-        const response = (await Promise.race([
-          aiClient.models.generateContent({
-            model: 'gemini-3.8-flash',
-            contents: prompt,
-            config: {
-              systemInstruction,
-              responseMimeType: 'application/json',
-              temperature: 0.2, // low temperature for analytical precision
-            },
-          }),
-          timeoutPromise,
-        ])) as any;
-
-        const text = response.text?.trim() || '';
-        if (text) {
-          const parsed = JSON.parse(text);
-          return {
-            answer: parsed.answer || 'Analysis complete based on verified calculations.',
-            fact: parsed.fact || JSON.stringify(calculatedFacts),
-            interpretation: parsed.interpretation || 'The calculated metrics describe the distribution of the dataset.',
-            limitation: parsed.limitation || 'Analysis is bounded by the available dimensions in this dataset.',
-            keyFindings: Array.isArray(parsed.keyFindings) ? parsed.keyFindings : [],
-            suggestedFollowUps: Array.isArray(parsed.suggestedFollowUps) ? parsed.suggestedFollowUps : [
-              'Which category had the highest volume?',
-              'Show monthly breakdown',
-              'Are there any outliers?',
-            ],
-            sourceOfTruth: 'deterministic_facts_explained_by_ai',
-          };
-        }
-      } catch (err) {
-        console.warn('Gemini explanation call failed, using deterministic analytical explanation fallback:', err);
+    const text = await callGeminiWithTimeoutAndFallback(prompt, systemInstruction, 25000);
+    if (text) {
+      try {
+        const parsed = JSON.parse(text);
+        return {
+          answer: parsed.answer || 'Analysis complete based on verified calculations.',
+          fact: parsed.fact || JSON.stringify(calculatedFacts),
+          interpretation: parsed.interpretation || 'The calculated metrics describe the distribution of the dataset.',
+          limitation: parsed.limitation || 'Analysis is bounded by the available dimensions in this dataset.',
+          keyFindings: Array.isArray(parsed.keyFindings) ? parsed.keyFindings : [],
+          suggestedFollowUps: Array.isArray(parsed.suggestedFollowUps) ? parsed.suggestedFollowUps : [
+            'Which category had the highest volume?',
+            'Show monthly breakdown',
+            'Are there any outliers?',
+          ],
+          sourceOfTruth: 'deterministic_facts_explained_by_ai',
+        };
+      } catch (parseErr) {
+        console.warn('[Analyze Data] Failed to parse AI explanation JSON, using deterministic fallback');
       }
     }
 
@@ -293,9 +324,7 @@ Respond with a JSON object with this exact shape:
     // Build default structured report
     const kpiSummary = kpis.map(k => `${k.title}: ${k.formattedValue}`).join(' | ');
 
-    if (aiClient && process.env.GEMINI_API_KEY) {
-      try {
-        const prompt = `Generate an Executive Management Report for dataset "${datasetName}".
+    const prompt = `Generate an Executive Management Report for dataset "${datasetName}".
 Dataset size: ${rowCount} rows
 Quality Score: ${qualityScore}/100 (${qualityIssuesCount} issues detected)
 Calculated KPIs: ${kpiSummary}
@@ -323,68 +352,56 @@ Provide a structured JSON report with:
   ]
 }`;
 
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Report AI generation timed out after 6000ms')), 6000)
-        );
+    const text = await callGeminiWithTimeoutAndFallback(
+      prompt,
+      'You are a Senior BI Executive. Maintain strict grounding in the provided facts. Do not invent metrics or speculate without evidence. Distinguish facts from hypotheses.',
+      25000
+    );
 
-        const response = (await Promise.race([
-          aiClient.models.generateContent({
-            model: 'gemini-3.8-flash',
-            contents: prompt,
-            config: {
-              systemInstruction: `You are a Senior BI Executive. Maintain strict grounding in the provided facts. Do not invent metrics or speculate without evidence. Distinguish facts from hypotheses.`,
-              responseMimeType: 'application/json',
-              temperature: 0.2,
+    if (text) {
+      try {
+        const parsed = JSON.parse(text);
+        return {
+          title: parsed.title || `Executive Analytics Report: ${datasetName}`,
+          datasetName,
+          generatedAt: now,
+          executiveSummary: parsed.executiveSummary || `Comprehensive analytics review of ${datasetName} covering ${rowCount} records. Performance indicators reflect steady operational volume with key opportunities identified in high-margin segments.`,
+          keyKpisSummary: parsed.keyKpisSummary || `Key portfolio KPIs show: ${kpiSummary}.`,
+          majorTrends: Array.isArray(parsed.majorTrends) && parsed.majorTrends.length > 0 ? parsed.majorTrends : [
+            {
+              period: 'Quarterly Overview',
+              observation: 'Steady overall performance punctuated by seasonal variance in Q1.',
+              fact: insights.find(i => i.type === 'trend')?.fact || 'Monthly trends reflect recurring demand cycles.',
             },
-          }),
-          timeoutPromise,
-        ])) as any;
-
-        const text = response.text?.trim() || '';
-        if (text) {
-          const parsed = JSON.parse(text);
-          return {
-            title: parsed.title || `Executive Analytics Report: ${datasetName}`,
-            datasetName,
-            generatedAt: now,
-            executiveSummary: parsed.executiveSummary || `Comprehensive analytics review of ${datasetName} covering ${rowCount} records. Performance indicators reflect steady operational volume with key opportunities identified in high-margin segments.`,
-            keyKpisSummary: parsed.keyKpisSummary || `Key portfolio KPIs show: ${kpiSummary}.`,
-            majorTrends: Array.isArray(parsed.majorTrends) && parsed.majorTrends.length > 0 ? parsed.majorTrends : [
-              {
-                period: 'Quarterly Overview',
-                observation: 'Steady overall performance punctuated by seasonal variance in Q1.',
-                fact: insights.find(i => i.type === 'trend')?.fact || 'Monthly trends reflect recurring demand cycles.',
-              },
-            ],
-            topPerformers: Array.isArray(parsed.topPerformers) && parsed.topPerformers.length > 0 ? parsed.topPerformers : [
-              {
-                segment: insights.find(i => i.type === 'ranking')?.title || 'Top Segment',
-                metrics: insights.find(i => i.type === 'ranking')?.evidence.map(e => `${e.label}: ${e.value}`).join(', ') || 'Leading performance',
-                takeaway: 'Core contributor to gross margin and customer acquisition.',
-              },
-            ],
-            areasRequiringAttention: Array.isArray(parsed.areasRequiringAttention) && parsed.areasRequiringAttention.length > 0 ? parsed.areasRequiringAttention : [
-              {
-                title: 'Variance & Data Hygiene',
-                severity: qualityScore < 85 ? 'high' : 'medium',
-                details: `${qualityIssuesCount} data hygiene items detected; quality health index currently at ${qualityScore}/100.`,
-                suggestedAction: 'Execute automated data cleaning pipeline to eliminate duplicates and standardize category taxonomies.',
-              },
-            ],
-            keyInsights: insights,
-            recommendedInvestigativeAreas: Array.isArray(parsed.recommendedInvestigativeAreas) ? parsed.recommendedInvestigativeAreas : [
-              'Investigate category margin variances to protect overall profitability.',
-              'Audit March order volumes to determine whether contraction was seasonal or inventory-constrained.',
-              'Establish standardized category nomenclature to maintain high data quality scores.',
-            ],
-            dataQualitySummary: {
-              score: qualityScore,
-              notes: `Data health score of ${qualityScore}/100 with ${qualityIssuesCount} detected points for optimization.`,
+          ],
+          topPerformers: Array.isArray(parsed.topPerformers) && parsed.topPerformers.length > 0 ? parsed.topPerformers : [
+            {
+              segment: insights.find(i => i.type === 'ranking')?.title || 'Top Segment',
+              metrics: insights.find(i => i.type === 'ranking')?.evidence.map(e => `${e.label}: ${e.value}`).join(', ') || 'Leading performance',
+              takeaway: 'Core contributor to gross margin and customer acquisition.',
             },
-          };
-        }
-      } catch (err) {
-        console.warn('Gemini report generation failed, using deterministic report fallback:', err);
+          ],
+          areasRequiringAttention: Array.isArray(parsed.areasRequiringAttention) && parsed.areasRequiringAttention.length > 0 ? parsed.areasRequiringAttention : [
+            {
+              title: 'Variance & Data Hygiene',
+              severity: qualityScore < 85 ? 'high' : 'medium',
+              details: `${qualityIssuesCount} data hygiene items detected; quality health index currently at ${qualityScore}/100.`,
+              suggestedAction: 'Execute automated data cleaning pipeline to eliminate duplicates and standardize category taxonomies.',
+            },
+          ],
+          keyInsights: insights,
+          recommendedInvestigativeAreas: Array.isArray(parsed.recommendedInvestigativeAreas) ? parsed.recommendedInvestigativeAreas : [
+            'Investigate category margin variances to protect overall profitability.',
+            'Audit March order volumes to determine whether contraction was seasonal or inventory-constrained.',
+            'Establish standardized category nomenclature to maintain high data quality scores.',
+          ],
+          dataQualitySummary: {
+            score: qualityScore,
+            notes: `Data health score of ${qualityScore}/100 with ${qualityIssuesCount} detected points for optimization.`,
+          },
+        };
+      } catch (parseErr) {
+        console.warn('[Analyze Data] Failed to parse AI management report JSON, using fallback');
       }
     }
 

@@ -127,29 +127,7 @@ ${report.recommendedInvestigativeAreas.map((r, i) => `${i + 1}. ${r}`).join('\n'
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8 print:p-0 print:m-0 print:max-w-none">
-      {/* Workflow Stage & Next Navigation Alternative */}
-      {onNavigate && (
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs pb-1 border-b border-slate-800/40 print:hidden">
-          <div className="flex items-center space-x-2 text-slate-400">
-            <span className="font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Pipeline:</span>
-            <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold text-[11px]">
-              Final Stage: Board-Ready Management Synthesis
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-2 text-xs">
-            <button
-              onClick={() => onNavigate('dashboard')}
-              className="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center space-x-1.5 cursor-pointer shadow-xs"
-            >
-              <span>KPI Dashboard</span>
-              <span>→</span>
-            </button>
-          </div>
-        </div>
-      )}
-
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6 print:p-0 print:m-0 print:max-w-none">
       {/* Top Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800 print:hidden">
         <div className="flex items-center space-x-2 text-xs text-slate-400">

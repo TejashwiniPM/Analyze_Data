@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Table2,
   FileText,
+  UploadCloud,
 } from 'lucide-react';
 import { api } from './services/api';
 import { NavigationTab, DatasetSummary } from './types';
@@ -184,198 +185,99 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col font-sans transition-colors duration-150 ${
+      className={`min-h-screen w-full max-w-full overflow-x-clip flex flex-col font-sans transition-colors duration-150 ${
         theme === 'light'
           ? 'theme-light theme-lilac-gradient text-[#111439] selection:bg-[#111439] selection:text-[#f8f8f9]'
           : 'theme-dark theme-dark-blue-gradient text-[#f8f8f9] selection:bg-[#f8f8f9] selection:text-[#111439]'
       }`}
     >
-      {/* Top Persistent Navbar */}
-      <Navbar
-        currentTab={currentTab}
-        onSelectTab={(tab) => {
-          handleNavigate(tab);
-        }}
-        datasets={datasets}
-        activeDatasetId={activeDatasetId}
-        onSelectDataset={handleSelectDataset}
-        onOpenUpload={() => setUploadModalOpen(true)}
-        qualityScore={qualityScore}
-        theme={theme}
-        onToggleTheme={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
-      />
+      {/* Fixed Sticky Top Header */}
+      <header className="fixed top-0 left-0 right-0 z-40 w-full backdrop-blur-md bg-gradient-to-r from-[#111439] via-[#151a4b] to-[#1c2363] border-b border-[#242b6a] shadow-lg shadow-black/25">
+        <Navbar
+          currentTab={currentTab}
+          onSelectTab={(tab) => {
+            handleNavigate(tab);
+          }}
+          datasets={datasets}
+          activeDatasetId={activeDatasetId}
+          onSelectDataset={handleSelectDataset}
+          onOpenUpload={() => setUploadModalOpen(true)}
+          qualityScore={qualityScore}
+          theme={theme}
+          onToggleTheme={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+        />
 
-      {/* Universal Interactive Navigation Trail & Context Bar */}
-      <div
-        className={`border-b px-4 sm:px-6 lg:px-8 py-2.5 backdrop-blur-sm sticky top-16 z-30 transition-colors ${
-          theme === 'light'
-            ? 'bg-[#f8f8f9]/95 border-[#d0d5ec] text-[#111439] shadow-xs'
-            : 'bg-[#111439]/90 border-[#22295d] text-[#f8f8f9]'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 text-xs">
-          {/* Left: Interactive Hierarchical Breadcrumbs & Contextual Jump */}
-          <div className="flex items-center space-x-2 sm:space-x-3 overflow-x-auto min-w-0 py-0.5 no-scrollbar">
-            {/* Clickable Breadcrumbs */}
-            <nav className={`flex items-center space-x-1.5 whitespace-nowrap text-xs ${theme === 'light' ? 'text-[#242b65]' : 'text-[#d0d4ea]'}`}>
-              <button
-                type="button"
-                onClick={() => handleNavigate('home')}
-                className={`hover:opacity-80 transition-colors flex items-center space-x-1 px-2 py-1 rounded-md cursor-pointer ${
-                  currentTab === 'home'
-                    ? theme === 'light'
-                      ? 'bg-[#edf0f8] text-[#111439] font-bold border border-[#d0d5ec] shadow-xs'
-                      : 'bg-[#1e2568] text-[#f8f8f9] font-bold border border-[#374182]'
-                    : theme === 'light'
-                      ? 'hover:bg-[#edf0f8] text-[#242b65]'
-                      : 'hover:bg-[#1a205a] text-[#d0d4ea]'
-                }`}
-                title="Go to Home overview"
-              >
-                <Home className="w-3.5 h-3.5" />
-                <span>Home</span>
-              </button>
-
-              <ChevronRight className={`w-3.5 h-3.5 shrink-0 opacity-60 ${theme === 'light' ? 'text-[#374182]' : 'text-[#8690c2]'}`} />
-
-              <button
-                type="button"
-                onClick={() => handleNavigate('dashboard')}
-                className={`hover:opacity-80 transition-colors flex items-center space-x-1 px-2 py-1 rounded-md cursor-pointer ${
-                  currentTab === 'dashboard'
-                    ? theme === 'light'
-                      ? 'bg-[#edf0f8] text-[#111439] font-bold border border-[#d0d5ec] shadow-xs'
-                      : 'bg-[#1e2568] text-[#f8f8f9] font-bold border border-[#374182]'
-                    : theme === 'light'
-                      ? 'hover:bg-[#edf0f8] text-[#242b65]'
-                      : 'hover:bg-[#1a205a] text-[#d0d4ea]'
-                }`}
-                title="Go to KPI Dashboard"
-              >
-                <Database className="w-3.5 h-3.5" />
-                <span className="max-w-[140px] truncate sm:max-w-none">
-                  {datasets.find((d) => d.id === activeDatasetId)?.name || 'Default Dataset'}
-                </span>
-              </button>
-
-              {currentTab !== 'home' && currentTab !== 'dashboard' && (
-                <>
-                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 opacity-60 ${theme === 'light' ? 'text-[#374182]' : 'text-[#8690c2]'}`} />
-                  <span
-                    className={`flex items-center space-x-1.5 font-bold px-2.5 py-1 rounded-md border shadow-xs ${
-                      theme === 'light'
-                        ? 'bg-[#eceff9] text-[#111439] border-[#b9c2eb]'
-                        : 'bg-[#242c7a]/60 text-[#f8f8f9] border-[#3e4ba8]'
-                    }`}
+        {/* Universal Interactive Navigation Trail & Context Bar */}
+        {currentTab !== 'home' && (
+          <div className="border-t border-[#242b6a]/80 bg-[#0d102e]/90 px-4 sm:px-6 lg:px-8 h-10 flex items-center">
+            <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3 text-xs">
+              {/* Left: Interactive Hierarchical Breadcrumbs */}
+              <div className="flex items-center space-x-2 min-w-0">
+                <nav className="flex items-center space-x-1.5 text-xs truncate text-[#d0d4ea]">
+                  <button
+                    type="button"
+                    onClick={() => handleNavigate('home')}
+                    className="hover:text-white transition-colors inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/10"
+                    title="Go to Home overview"
                   >
-                    <CurrentIcon className={`w-3.5 h-3.5 ${theme === 'light' ? 'text-[#111439]' : 'text-[#f8f8f9]'}`} />
-                    <span>{getTabLabel(currentTab)}</span>
+                    <Home className="w-3.5 h-3.5 text-[#38bdf8] shrink-0" />
+                    <span>Home</span>
+                  </button>
+
+                  <ChevronRight className="w-3.5 h-3.5 opacity-40 text-slate-400 shrink-0" />
+
+                  <button
+                    type="button"
+                    onClick={() => handleNavigate('dashboard')}
+                    className="hover:text-white transition-colors inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-md cursor-pointer truncate hover:bg-white/10"
+                    title="Go to KPI Dashboard"
+                  >
+                    <Database className="w-3.5 h-3.5 text-[#38bdf8] shrink-0" />
+                    <span className="max-w-[140px] sm:max-w-[200px] truncate font-medium text-slate-200">
+                      {datasets.find((d) => d.id === activeDatasetId)?.name || 'Dataset'}
+                    </span>
+                  </button>
+
+                  <ChevronRight className="w-3.5 h-3.5 opacity-40 text-slate-400 shrink-0" />
+
+                  <span className="inline-flex items-center space-x-1.5 font-bold px-2.5 py-0.5 rounded-md border text-xs truncate bg-[#20276a] text-[#f8f8f9] border-[#3e4ba8]">
+                    <CurrentIcon className="w-3.5 h-3.5 text-[#38bdf8] shrink-0" />
+                    <span className="truncate">{getTabLabel(currentTab)}</span>
                   </span>
-                </>
-              )}
-            </nav>
+                </nav>
+              </div>
 
-            {/* Smart Contextual Jump Chip (Alternative to raw back button) */}
-            {previousTab && previousTab !== currentTab && (
-              <>
-                <span className={theme === 'light' ? 'text-[#c8cee8] hidden sm:inline' : 'text-[#374182] hidden sm:inline'}>|</span>
+              {/* Right: Smart Return Chip & Fast Switcher */}
+              <div className="flex items-center space-x-2 shrink-0">
+                {previousTab && previousTab !== currentTab && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold text-[#cad1fa] hover:text-white hover:bg-white/10 transition-colors group shrink-0 cursor-pointer"
+                    title={`Return to ${getTabLabel(previousTab)}`}
+                  >
+                    <RotateCcw className="w-3 h-3 text-[#38bdf8] transition-transform group-hover:-rotate-45" />
+                    <span className="hidden sm:inline">Back to</span>
+                    <span className="underline decoration-dotted">{getTabLabel(previousTab)}</span>
+                  </button>
+                )}
+
                 <button
-                  type="button"
-                  onClick={handleBack}
-                  className={`hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all group shrink-0 shadow-xs cursor-pointer ${
-                    theme === 'light'
-                      ? 'bg-white hover:bg-[#edf0f8] text-[#111439] border border-[#d0d5ec]'
-                      : 'bg-[#161b4d] hover:bg-[#1e2568] text-[#f8f8f9] border border-[#2b357e]'
-                  }`}
-                  title={`Jump back to ${getTabLabel(previousTab)}`}
+                  onClick={() => setUploadModalOpen(true)}
+                  className="inline-flex items-center space-x-1.5 text-xs font-semibold px-2 py-0.5 rounded-md border border-[#29327a] text-[#cad1fa] hover:bg-[#1e2568] hover:text-white transition-colors cursor-pointer"
+                  title="Upload or switch dataset"
                 >
-                  <RotateCcw className={`w-3 h-3 transition-transform group-hover:-rotate-45 ${theme === 'light' ? 'text-[#111439]' : 'text-[#f8f8f9]'}`} />
-                  <span>Return to <span className="underline decoration-dotted">{getTabLabel(previousTab)}</span></span>
+                  <UploadCloud className="w-3.5 h-3.5 text-[#38bdf8]" />
+                  <span className="hidden sm:inline">Switch Dataset</span>
                 </button>
-              </>
-            )}
-          </div>
-
-          {/* Right: Active Dataset Indicator & Fast Switcher */}
-          <div className={`flex items-center space-x-2 shrink-0 ${theme === 'light' ? 'text-[#111439]' : 'text-[#f8f8f9]'}`}>
-            <span className="hidden md:inline text-[11px] font-medium opacity-70">Dataset:</span>
-            <div
-              className={`flex items-center space-x-1.5 font-semibold px-2.5 py-1 rounded-lg border text-[11px] ${
-                theme === 'light'
-                  ? 'bg-white text-[#111439] border-[#d0d5ec] shadow-xs'
-                  : 'bg-[#161b4d] text-[#f8f8f9] border-[#29327a]'
-              }`}
-            >
-              <Database className={`w-3 h-3 ${theme === 'light' ? 'text-[#111439]' : 'text-[#38bdf8]'}`} />
-              <span className="truncate max-w-[130px] sm:max-w-[200px]">
-                {datasets.find((d) => d.id === activeDatasetId)?.name || 'Sales & Profit Analytics'}
-              </span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
+      </header>
 
-      {/* Quick Dashboard & Tab Navigation Strip - Always visible across mobile, tablet, and desktop */}
-      <div
-        className={`border-b px-4 sm:px-6 lg:px-8 py-2 transition-colors ${
-          theme === 'light'
-            ? 'bg-[#edf0f8]/90 border-[#d0d5ec]'
-            : 'bg-[#111439]/80 border-[#22295d]'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center space-x-1 sm:space-x-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
-            {[
-              { id: 'dashboard' as NavigationTab, label: 'Dashboard', icon: BarChart3 },
-              { id: 'analysis' as NavigationTab, label: 'Analysis', icon: Sliders },
-              { id: 'insights' as NavigationTab, label: 'Insights', icon: Lightbulb },
-              { id: 'ask' as NavigationTab, label: 'Ask My Data', icon: Sparkles },
-              { id: 'quality' as NavigationTab, label: 'Quality Audit', icon: ShieldCheck },
-              { id: 'explorer' as NavigationTab, label: 'Explorer', icon: Table2 },
-              { id: 'reports' as NavigationTab, label: 'Reports', icon: FileText },
-              { id: 'home' as NavigationTab, label: 'Home', icon: Home },
-            ].map((tabItem) => {
-              const Icon = tabItem.icon;
-              const isActive = currentTab === tabItem.id;
-              let tabClasses = '';
-              if (theme === 'light') {
-                tabClasses = isActive
-                  ? 'bg-gradient-to-r from-[#111439] via-[#1a215e] to-[#252f86] text-[#f8f8f9] font-bold shadow-sm shadow-[#111439]/30 border border-[#111439]'
-                  : 'bg-[#f8f8f9] hover:bg-[#edf0f8] text-[#111439] border border-[#d0d5ec] font-semibold hover:text-[#111439]';
-              } else {
-                tabClasses = isActive
-                  ? 'bg-gradient-to-r from-[#242c78] via-[#3540a8] to-[#4a57ce] text-[#f8f8f9] font-bold shadow-md shadow-[#3540a8]/30 border border-[#4a57ce]'
-                  : 'bg-[#141846] hover:bg-[#1a205a] text-[#d0d4ea] border border-[#22295d] hover:text-[#f8f8f9] font-semibold';
-              }
-
-              return (
-                <button
-                  key={tabItem.id}
-                  onClick={() => handleNavigate(tabItem.id)}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${tabClasses}`}
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span>{tabItem.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={() => setUploadModalOpen(true)}
-            className={`hidden sm:inline-flex items-center space-x-1 text-xs font-semibold shrink-0 cursor-pointer ${
-              theme === 'light'
-                ? 'text-[#111439] hover:text-[#252f86] font-bold'
-                : 'text-[#cad1fa] hover:text-[#f8f8f9] font-bold'
-            }`}
-          >
-            <span>+ Upload / Switch</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <main className="flex-1 pb-16">
+      {/* Main Content Area with exact top-padding compensation for fixed header */}
+      <main className={`flex-1 w-full max-w-full pb-16 ${currentTab === 'home' ? 'pt-16' : 'pt-[104px]'}`}>
         {currentTab === 'home' && (
           <HomePage
             onOpenUpload={() => setUploadModalOpen(true)}

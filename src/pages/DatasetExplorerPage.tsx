@@ -116,29 +116,7 @@ export const DatasetExplorerPage: React.FC<DatasetExplorerPageProps> = ({ datase
   const paginatedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Workflow Stage & Next Navigation Alternative */}
-      {onNavigate && (
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs pb-1 border-b border-slate-800/40">
-          <div className="flex items-center space-x-2 text-slate-400">
-            <span className="font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Explorer:</span>
-            <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold text-[11px]">
-              Raw Data Inspection & Schema Dictionary
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-2 text-xs">
-            <button
-              onClick={() => onNavigate('dashboard')}
-              className="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center space-x-1.5 cursor-pointer shadow-xs"
-            >
-              <span>KPI Dashboard</span>
-              <span>→</span>
-            </button>
-          </div>
-        </div>
-      )}
-
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Top Header */}
       <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

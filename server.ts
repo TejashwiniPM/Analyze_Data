@@ -23,7 +23,7 @@ async function startServer() {
 
   // Health endpoint
   app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', service: 'Analytics with Data', timestamp: new Date().toISOString() });
+    res.json({ status: 'ok', service: 'Analyze Data', timestamp: new Date().toISOString() });
   });
 
   if (process.env.NODE_ENV === 'production') {
@@ -40,11 +40,11 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Analytics with Data] Platform listening on port ${PORT}`);
+    console.log(`[Analyze Data] Platform listening on port ${PORT}`);
   });
 }
 
 startServer().catch((err) => {
-  console.error('[Analytics with Data] Critical server startup failure:', err);
+  console.error('[Analyze Data] Critical server startup failure:', err);
   process.exit(1);
 });

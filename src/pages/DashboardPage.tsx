@@ -134,100 +134,73 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ datasetId, onNavig
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Workflow Stage & Next Navigation Alternative */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs pb-1 border-b border-slate-800/40">
-        <div className="flex items-center space-x-2 text-slate-400">
-          <span className="font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Pipeline:</span>
-          <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold text-[11px]">
-            Stage 1: Executive KPI Overview
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-xs">
-          <button
-            onClick={() => onNavigate('analysis')}
-            className="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center space-x-1.5 cursor-pointer shadow-xs"
-          >
-            <span>Next: Deep Analysis</span>
-            <span>→</span>
-          </button>
-          <button
-            onClick={() => onNavigate('insights')}
-            className="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center space-x-1.5 cursor-pointer shadow-xs"
-          >
-            <span>AI Insights</span>
-            <span>→</span>
-          </button>
-        </div>
-      </div>
-
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 min-w-0">
       {/* Top Header Card */}
-      <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl shadow-indigo-500/5">
-        <div>
-          <div className="flex items-center space-x-2 text-xs font-medium text-slate-400 mb-1.5">
-            <Database className="w-3.5 h-3.5 text-cyan-400" />
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-900/80 border border-slate-800/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 shadow-xl shadow-indigo-500/5 min-w-0">
+        <div className="min-w-0">
+          <div className="flex items-center space-x-2 text-xs font-medium text-slate-400 mb-1 truncate">
+            <Database className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             <span>Active Dataset</span>
             <span>•</span>
-            <span className="text-slate-300 font-semibold">{dashboardData.name}</span>
+            <span className="text-slate-300 font-semibold truncate">{dashboardData.name}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-100 tracking-tight truncate">
             KPI & Analytics Dashboard
           </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
             <span>{dashboardData.rowCount.toLocaleString()} verified rows</span>
             <span>•</span>
             <span>{dashboardData.columnCount} columns</span>
             <span>•</span>
             <span className="flex items-center space-x-1 text-emerald-400">
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
               <span>Quality Score: {dashboardData.qualityScore}/100</span>
             </span>
             <span>•</span>
             <span className="flex items-center space-x-1">
-              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
               <span>Analyzed Today</span>
             </span>
           </div>
         </div>
 
         {/* Quick Action Navigation */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
             onClick={() => onNavigate('analysis')}
-            className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold transition-all hover:scale-105"
+            className="flex items-center space-x-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold transition-all hover:scale-102"
             title="Open Deep Statistical Analysis Dashboard"
           >
-            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Analysis Dashboard</span>
+            <Sliders className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <span>Analysis</span>
           </button>
           <button
             onClick={() => onNavigate('insights')}
-            className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-all hover:scale-105"
+            className="flex items-center space-x-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-all hover:scale-102"
             title="Open Dedicated Insights Dashboard"
           >
-            <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-            <span>Insights Dashboard</span>
+            <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>Insights</span>
           </button>
           <button
             onClick={() => onNavigate('ask')}
-            className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold transition-all hover:scale-105"
+            className="flex items-center space-x-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold transition-all hover:scale-102"
           >
-            <MessageSquareCode className="w-3.5 h-3.5 text-cyan-400" />
+            <MessageSquareCode className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             <span>Ask My Data</span>
           </button>
         </div>
       </div>
 
       {/* 1. KPIs Section */}
-      <section className="space-y-3">
+      <section className="space-y-3 min-w-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 truncate">
             Key Performance Indicators (Calculated Facts)
           </h2>
-          <span className="text-[11px] text-slate-500 font-mono">100% verified by calculation engine</span>
+          <span className="text-[11px] text-slate-500 font-mono hidden sm:inline shrink-0">100% verified</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 min-w-0">
           {dashboardData.kpis.map((kpi) => (
             <MetricCard key={kpi.id} kpi={kpi} />
           ))}

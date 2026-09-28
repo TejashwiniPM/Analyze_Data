@@ -188,34 +188,7 @@ export const AnalysisDashboardPage: React.FC<AnalysisDashboardPageProps> = ({
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Workflow Stage & Next Navigation Alternative */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs pb-1 border-b border-slate-800/40">
-        <div className="flex items-center space-x-2 text-slate-400">
-          <span className="font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Pipeline:</span>
-          <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold text-[11px]">
-            Stage 2: Multi-Dimensional Breakdown
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-xs">
-          <button
-            onClick={() => onNavigate('dashboard')}
-            className="text-slate-400 hover:text-slate-200 px-2.5 py-1 rounded-lg transition-colors font-medium cursor-pointer"
-          >
-            Overview
-          </button>
-          <span className="text-slate-600">·</span>
-          <button
-            onClick={() => onNavigate('insights')}
-            className="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center space-x-1.5 cursor-pointer shadow-xs"
-          >
-            <span>Next: Verified AI Insights</span>
-            <span>→</span>
-          </button>
-        </div>
-      </div>
-
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Top Banner Header */}
       <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-xl shadow-indigo-500/5">
         <div className="space-y-1">

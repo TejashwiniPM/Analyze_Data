@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+html,
+body,
+#root {
+  overflow-x: clip;
+  max-width: 100vw;
+  width: 100%;
+}
+
 :root {
   --color-white-lilac: #f8f8f9;
   --color-dark-blue: #111439;
@@ -241,14 +249,31 @@ body:has(.theme-lilac-gradient) {
 .theme-light header .text-slate-200,
 .theme-lilac-gradient header .text-slate-100,
 .theme-lilac-gradient header .text-slate-200 {
-  color: #f8f8f9 !important;
+  color: #ffffff !important;
 }
 
 .theme-light header .text-slate-300,
 .theme-light header .text-slate-400,
 .theme-lilac-gradient header .text-slate-300,
 .theme-lilac-gradient header .text-slate-400 {
-  color: #cbd1ed !important;
+  color: #cbd5e1 !important;
+}
+
+/* Ensure all header text, dropdown menus, and dataset selectors always have crisp white typography */
+header p,
+header .dataset-dropdown,
+header .dataset-dropdown p,
+header .dataset-dropdown span,
+header .dataset-dropdown button,
+.theme-light header p,
+.theme-lilac-gradient header p {
+  color: #ffffff;
+}
+
+header .text-white,
+.theme-light header .text-white,
+.theme-lilac-gradient header .text-white {
+  color: #ffffff !important;
 }
 
 /* ==========================================================================
